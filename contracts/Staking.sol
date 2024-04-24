@@ -17,7 +17,7 @@ contract Staking is Ownable, Pausable, ReentrancyGuard {
 
     uint256 public startTime;
     uint256 public endTime;
-    uint256 public withdrawTime;
+    uint256 public withdrawDelay;
 
     uint256 public rewardPerTokenPerSecond;
     uint256 public hardCap;
@@ -120,8 +120,8 @@ contract Staking is Ownable, Pausable, ReentrancyGuard {
         rewardPerTokenPerSecond = (10 ** IERC20Metadata(rewardToken).decimals()) * IERC20(rewardToken).balanceOf(address(this)) / hardCap / (endTime - startTime);
     }
 
-    function setWithdrawTime(uint256 _withdrawTime) external onlyOwner {
-       withdrawTime = _withdrawTime;
+    function setWithdrawDelay(uint256 _withdrawDelay) external onlyOwner {
+       withdrawDelay = _withdrawDelay;
     }
 
     function setVersion(uint256 _version) external onlyOwner {
@@ -129,7 +129,8 @@ contract Staking is Ownable, Pausable, ReentrancyGuard {
     }
 
     function withdraw(address token) external onlyOwner {
-        require(block.timestamp >= withdrawTime, "Cannot withdraw");
+        require(block.timestamp >= endTime + withdrawDelay, "Cannot withdraw");
+        require(token != stakeToken, "Cannot withdraw stake token");
         uint256 amount = IERC20(token).balanceOf(address(this));
         IERC20(token).safeTransfer(_msgSender(), amount);
         emit WithdrawEvent(_msgSender(), amount);

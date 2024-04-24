@@ -18,11 +18,12 @@ describe("Staking", function () {
     const rewardTokenAddress = await EMP.getAddress();
     const startTime = (await time.latest()) + 60;
     const endTime = startTime + 60 * 60;
+    const withdrawDelay = 60 * 60 * 2;
     let staking = await StakingContract.deploy(stakeTokenAddress, rewardTokenAddress, startTime, endTime, HARD_CAP.toString());
     staking = await staking.waitForDeployment();
     const rewardAmount = BigInt(1000 * 10 ** 18);
     await EMP.transfer(await staking.getAddress(), rewardAmount.toString());
-    await staking.setWithdrawTime((await time.latest()) + 60 * 60 * 2);
+    await staking.setWithdrawDelay(withdrawDelay);
     await staking.setRewardPerTokenPerSecond();
     expect(await staking.rewardPerTokenPerSecond()).to.equal(BigInt(10 ** 18) * rewardAmount / HARD_CAP / 3600n);
     const stakeValue = BigInt(88 * 10 ** 18);
@@ -32,6 +33,15 @@ describe("Staking", function () {
     await time.increaseTo(startTime);
     expect(await MBTC.allowance(await owner.getAddress(), await staking.getAddress())).to.equal(stakeValue.toString());
     await staking.stake(stakeValue.toString());
+    await expect(staking.redeem()).to.be.revertedWith('Cannot Redeem.');
+    await time.increaseTo(endTime);
+    await staking.redeem();
+    await expect(staking.unstake((stakeValue + BigInt(1)).toString())).to.be.revertedWith('Exceeds balance');
+    await staking.unstake(stakeValue.toString());
+    await expect(staking.withdraw(stakeTokenAddress)).to.be.revertedWith('Cannot withdraw');
+    await time.increaseTo(endTime + withdrawDelay);
+    await expect(staking.withdraw(stakeTokenAddress)).to.be.revertedWith('Cannot withdraw stake token');
+    await staking.withdraw(rewardTokenAddress);
   }
 
   describe("Deployment", function () {
