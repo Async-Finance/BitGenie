@@ -70,7 +70,7 @@ contract Staking is Ownable, Pausable, ReentrancyGuard {
             return reward[account];
         }
         uint256 timeElapsed = _currentTime - _lastUpdateTime;
-        uint256 earned = balanceOf[account] * timeElapsed * rewardPerTokenPerSecond / (10 ** IERC20Metadata(rewardToken).decimals());
+        uint256 earned = balanceOf[account] * timeElapsed * rewardPerTokenPerSecond / (10 ** IERC20Metadata(stakeToken).decimals());
         return reward[account] + earned;
     }
 
