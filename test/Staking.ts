@@ -2,10 +2,11 @@ import { time } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
-const HARD_CAP = BigInt(1000 * 10 ** 18);
 
 describe("Staking", function () {
-  async function initContractFixture() {
+
+  async function stake18With18() {
+    const HARD_CAP = BigInt(1000 * 10 ** 18);
     const [owner] = await ethers.getSigners();
     const EMPToken = await ethers.getContractFactory("EMP");
     let EMP = await EMPToken.deploy(1000000000);
@@ -26,7 +27,7 @@ describe("Staking", function () {
     await staking.setWithdrawDelay(withdrawDelay);
     await staking.setRewardPerTokenPerSecond();
     expect(await staking.rewardPerTokenPerSecond()).to.equal(BigInt(10 ** 18) * rewardAmount / HARD_CAP / 3600n);
-    const stakeValue = BigInt(88 * 10 ** 18);
+    const stakeValue = BigInt(10 ** 18);
     await expect(staking.stake(stakeValue.toString())).to.be.revertedWith('StakingFund doesn\'t have enough allowance');
     // stake
     await MBTC.approve(await staking.getAddress(), stakeValue.toString());
@@ -44,9 +45,95 @@ describe("Staking", function () {
     await staking.withdraw(rewardTokenAddress);
   }
 
+  async function stake18With5() {
+    const HARD_CAP = BigInt(1000 * 10 ** 18);
+    const [owner] = await ethers.getSigners();
+    const DOGEToken = await ethers.getContractFactory("DOGE");
+    let DOGE = await DOGEToken.deploy(1000000000);
+    DOGE = await DOGE.waitForDeployment();
+    const MBTCToken = await ethers.getContractFactory("MBTC");
+    let MBTC = await MBTCToken.deploy(1000000000);
+    MBTC = await MBTC.waitForDeployment();
+    const StakingContract = await ethers.getContractFactory("Staking");
+    const stakeTokenAddress = await MBTC.getAddress();
+    const rewardTokenAddress = await DOGE.getAddress();
+    const startTime = (await time.latest()) + 60;
+    const endTime = startTime + 60 * 60;
+    const withdrawDelay = 60 * 60 * 2;
+    let staking = await StakingContract.deploy(stakeTokenAddress, rewardTokenAddress, startTime, endTime, HARD_CAP.toString());
+    staking = await staking.waitForDeployment();
+    const rewardAmount = BigInt(1000 * 10 ** 5);
+    await DOGE.transfer(await staking.getAddress(), rewardAmount.toString());
+    await staking.setWithdrawDelay(withdrawDelay);
+    await staking.setRewardPerTokenPerSecond();
+    expect(await staking.rewardPerTokenPerSecond()).to.equal(BigInt(10 ** 18) * rewardAmount / HARD_CAP / 3600n);
+    const stakeValue = BigInt(10 ** 18);
+    await expect(staking.stake(stakeValue.toString())).to.be.revertedWith('StakingFund doesn\'t have enough allowance');
+    // stake
+    await MBTC.approve(await staking.getAddress(), stakeValue.toString());
+    await time.increaseTo(startTime);
+    expect(await MBTC.allowance(await owner.getAddress(), await staking.getAddress())).to.equal(stakeValue.toString());
+    await staking.stake(stakeValue.toString());
+    await expect(staking.redeem()).to.be.revertedWith('Cannot Redeem.');
+    await time.increaseTo(endTime);
+    // await expect(await staking.available(await owner.getAddress())).to.be.equal(await staking.rewardPerTokenPerSecond() * 3600n);
+    await staking.redeem();
+    await expect(staking.unstake((stakeValue + BigInt(1)).toString())).to.be.revertedWith('Exceeds balance');
+    await staking.unstake(stakeValue.toString());
+    await expect(staking.withdraw(stakeTokenAddress)).to.be.revertedWith('Cannot withdraw');
+    await time.increaseTo(endTime + withdrawDelay);
+    await expect(staking.withdraw(stakeTokenAddress)).to.be.revertedWith('Cannot withdraw stake token');
+    await staking.withdraw(rewardTokenAddress);
+  }
+
+  async function stake5With18() {
+    const HARD_CAP = BigInt(1000 * 10 ** 5);
+    const [owner] = await ethers.getSigners();
+    const EMPToken = await ethers.getContractFactory("EMP");
+    let EMP = await EMPToken.deploy(1000000000);
+    EMP = await EMP.waitForDeployment();
+    const DOGEToken = await ethers.getContractFactory("DOGE");
+    let DOGE = await DOGEToken.deploy(1000000000);
+    DOGE = await DOGE.waitForDeployment();
+    const StakingContract = await ethers.getContractFactory("Staking");
+    const stakeTokenAddress = await DOGE.getAddress();
+    const rewardTokenAddress = await EMP.getAddress();
+    const startTime = (await time.latest()) + 60;
+    const endTime = startTime + 60 * 60;
+    const withdrawDelay = 60 * 60 * 2;
+    let staking = await StakingContract.deploy(stakeTokenAddress, rewardTokenAddress, startTime, endTime, HARD_CAP.toString());
+    staking = await staking.waitForDeployment();
+    const rewardAmount = BigInt(1000 * 10 ** 18);
+    await EMP.transfer(await staking.getAddress(), rewardAmount.toString());
+    await staking.setWithdrawDelay(withdrawDelay);
+    await staking.setRewardPerTokenPerSecond();
+    console.log(await staking.rewardPerTokenPerSecond());
+    expect(await staking.rewardPerTokenPerSecond()).to.equal(BigInt(10 ** 5) * rewardAmount / HARD_CAP / 3600n);
+    const stakeValue = BigInt(10 ** 5);
+    await expect(staking.stake(stakeValue.toString())).to.be.revertedWith('StakingFund doesn\'t have enough allowance');
+    // stake
+    await DOGE.approve(await staking.getAddress(), stakeValue.toString());
+    await time.increaseTo(startTime);
+    expect(await DOGE.allowance(await owner.getAddress(), await staking.getAddress())).to.equal(stakeValue.toString());
+    await staking.stake(stakeValue.toString());
+    await expect(staking.redeem()).to.be.revertedWith('Cannot Redeem.');
+    await time.increaseTo(endTime);
+    console.log(await staking.available(await owner.getAddress()));
+    await expect(await staking.available(await owner.getAddress())).to.be.equal(await staking.rewardPerTokenPerSecond() * 3600n);
+    await staking.redeem();
+    await expect(staking.unstake((stakeValue + BigInt(1)).toString())).to.be.revertedWith('Exceeds balance');
+    await staking.unstake(stakeValue.toString());
+    await expect(staking.withdraw(stakeTokenAddress)).to.be.revertedWith('Cannot withdraw');
+    await time.increaseTo(endTime + withdrawDelay);
+    await expect(staking.withdraw(stakeTokenAddress)).to.be.revertedWith('Cannot withdraw stake token');
+    await staking.withdraw(rewardTokenAddress);
+  }
+
   describe("Deployment", function () {
     it("Init contract", async function () {
-      await initContractFixture();
+      await stake18With18();
+      await stake18With5();
+      await stake5With18();
     });
 
   //   it("Should set the right owner", async function () {
