@@ -25,6 +25,7 @@ contract Staking is Ownable, Pausable, ReentrancyGuard {
     uint256 public version = 1;
 
     uint256 public userAmount;
+    uint256 public rewardTokenAmount;
     mapping(address => bool) private stakedUser;
 
     mapping(address => uint256) public balanceOf;
@@ -117,7 +118,8 @@ contract Staking is Ownable, Pausable, ReentrancyGuard {
     }
 
     function setRewardPerTokenPerSecond() external onlyOwner {
-        rewardPerTokenPerSecond = (10 ** IERC20Metadata(rewardToken).decimals()) * IERC20(rewardToken).balanceOf(address(this)) / hardCap / (endTime - startTime);
+        rewardTokenAmount = IERC20(rewardToken).balanceOf(address(this));
+        rewardPerTokenPerSecond = (10 ** IERC20Metadata(stakeToken).decimals()) * IERC20(rewardToken).balanceOf(address(this)) / hardCap / (endTime - startTime);
     }
 
     function setWithdrawDelay(uint256 _withdrawDelay) external onlyOwner {

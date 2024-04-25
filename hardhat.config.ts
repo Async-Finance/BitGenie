@@ -18,9 +18,9 @@ const config: HardhatUserConfig = {
   networks: {
     MerlinTestnet: {
       url: "https://testnet-rpc.merlinchain.io",
-      accounts: [process.env.SECRET_KEY || ""],
-      gas: 30000000,
-      gasPrice: 50000000,
+      accounts: [process.env.TEST_SECRET_KEY || ""],
+      // gas: 30000000,
+      // gasPrice: 50000000,
     },
     MerlinMainnet: {
       url: "https://rpc.merlinchain.io",
@@ -52,8 +52,8 @@ const config: HardhatUserConfig = {
         network: "MerlinTestnet",
         chainId: 686868,
         urls: {
-          apiURL: "https://testnet-scan-v1.merlinchain.io/api",
-          browserURL: "https://testnet-scan-v1.merlinchain.io",
+          apiURL: "https://testnet-scan.merlinchain.io/api",
+          browserURL: "https://testnet-scan.merlinchain.io",
         },
       },
       {
