@@ -9,7 +9,7 @@ describe("CeritficateToken", function () {
     it("Init contract", async function () {
       const [owner, recipient] = await ethers.getSigners();
       const tokenFactory = await ethers.getContractFactory("CertificateToken");
-      let token = await tokenFactory.deploy('CertificateToken', 'CT', await owner.getAddress());
+      let token = await tokenFactory.deploy('CertificateToken', 'CT', 18, await owner.getAddress());
       token = await token.waitForDeployment();
       const amount = BigInt(100);
       await token.mint(await recipient.getAddress(), amount);
@@ -20,7 +20,7 @@ describe("CeritficateToken", function () {
     it("Init contract", async function () {
       const [owner, recipient] = await ethers.getSigners();
       const tokenFactory = await ethers.getContractFactory("CertificateToken");
-      let token = await tokenFactory.deploy('CertificateToken', 'CT', await owner.getAddress());
+      let token = await tokenFactory.deploy('CertificateToken', 'CT', 18, await owner.getAddress());
       token = await token.waitForDeployment();
       const amount = BigInt(100);
       await token.mint(await recipient.getAddress(), amount);
@@ -33,7 +33,7 @@ describe("CeritficateToken", function () {
     it("Init contract", async function () {
       const [owner, recipient] = await ethers.getSigners();
       const tokenFactory = await ethers.getContractFactory("CertificateToken");
-      let token = await tokenFactory.deploy('CertificateToken', 'CT', await owner.getAddress());
+      let token = await tokenFactory.deploy('CertificateToken', 'CT', 18, await owner.getAddress());
       token = await token.waitForDeployment();
       const amount = BigInt(100);
       await token.mint(await recipient.getAddress(), amount);

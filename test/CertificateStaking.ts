@@ -10,14 +10,15 @@ describe("CeritficateStaking", function () {
     const EMPToken = await ethers.getContractFactory("EMP");
     let EMP = await EMPToken.deploy(1000000000);
     EMP = await EMP.waitForDeployment();
+    const decimals = await EMP.decimals();
     const stakingContract = await ethers.getContractFactory("CertificateStaking");
     let staking = await stakingContract.deploy(await EMP.getAddress(), 'PEMP Token', 'PEMP');
     staking = await staking.waitForDeployment();
     let round = BigInt(0);
-    let limit = BigInt(20 * 10 ** 18);
+    let limit = BigInt(BigInt(20) * BigInt(10) ** decimals);
     let startTime = await time.latest() + 1000;
 
-    const depositAmount = BigInt(100000000 * 10 ** 18);
+    const depositAmount = BigInt(BigInt(100000000) * BigInt(10) ** decimals);
 
     await EMP.approve(await staking.getAddress(), depositAmount);
     await staking.deposit(depositAmount);

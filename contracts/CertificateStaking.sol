@@ -35,7 +35,8 @@ contract CertificateStaking is Ownable, ReentrancyGuard {
     constructor(address _stakedToken, string memory _certificateName, string memory _certificateSymbol) Ownable(_msgSender()) {
         stakedToken = _stakedToken;
         bytes32 salt = keccak256(abi.encodePacked(_stakedToken, _certificateName, _certificateSymbol));
-        certificateToken = address(new CertificateToken{salt: salt}(_certificateName, _certificateSymbol, address(this)));
+        uint8 stakedTokenDecimal = ERC20(_stakedToken).decimals();
+        certificateToken = address(new CertificateToken{salt: salt}(_certificateName, _certificateSymbol, stakedTokenDecimal, address(this)));
         round = 0;
         withdrawLimit = 0;
         withdrawAmount = 0;
